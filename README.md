@@ -26,6 +26,9 @@ The project currently provides complete CRUD operations, input validation, autom
 - Pydantic
 - Uvicorn
 - Git and GitHub
+- Pytest
+- FastAPI TestClient
+- In-memory SQLite testing
 
 ## Project Structure
 
@@ -159,9 +162,34 @@ The application currently includes:
 - Pagination support
 - Interactive OpenAPI documentation
 
+## Automated Tests
+
+The project includes automated API tests covering:
+
+- Empty task-list behaviour
+- Task creation
+- Task retrieval by ID
+- Partial task updates
+- Task deletion
+- `404 Not Found` handling
+- Empty-title validation
+
+Run the complete test suite with:
+
+```powershell
+python -m pytest -v
+```
+
+Expected result:
+
+```text
+6 passed
+```
+
+The tests use a separate in-memory SQLite database, so they do not modify the local `tasks.db` database.
+
 ## Planned Improvements
 
-- Automated tests using Pytest
 - Docker containerisation
 - Continuous integration using GitHub Actions
 - MCP server integration using FastMCP
