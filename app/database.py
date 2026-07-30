@@ -1,14 +1,19 @@
+import os
 from collections.abc import Generator
 
 from sqlmodel import Session, SQLModel, create_engine
 
 
-DATABASE_FILE = "tasks.db"
-DATABASE_URL = f"sqlite:///{DATABASE_FILE}"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///tasks.db",
+)
 
-connect_args = {
-    "check_same_thread": False,
-}
+connect_args = (
+    {"check_same_thread": False}
+    if DATABASE_URL.startswith("sqlite")
+    else {}
+)
 
 engine = create_engine(
     DATABASE_URL,

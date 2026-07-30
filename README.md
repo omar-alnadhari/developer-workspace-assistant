@@ -29,6 +29,9 @@ The project currently provides complete CRUD operations, input validation, autom
 - Pytest
 - FastAPI TestClient
 - In-memory SQLite testing
+- Docker
+- Docker volumes
+- Environment variables
 
 ## Project Structure
 
@@ -188,12 +191,51 @@ Expected result:
 
 The tests use a separate in-memory SQLite database, so they do not modify the local `tasks.db` database.
 
+## Docker
+
+Build the Docker image:
+
+```bash
+docker build -t developer-workspace-assistant .
+```
+
+Create a persistent Docker volume:
+
+```bash
+docker volume create developer-workspace-data
+```
+
+Run the application with persistent SQLite storage:
+
+```bash
+docker run -d --name developer-workspace-api -p 8000:8000 -e DATABASE_URL=sqlite:////data/tasks.db -v developer-workspace-data:/data developer-workspace-assistant
+```
+
+View the running container:
+
+```bash
+docker ps
+```
+
+View application logs:
+
+```bash
+docker logs developer-workspace-api
+```
+
+Stop and remove the container:
+
+```bash
+docker stop developer-workspace-api
+docker rm developer-workspace-api
+```
+
+The named Docker volume preserves the SQLite database even after the container is removed.
+
 ## Planned Improvements
 
-- Docker containerisation
 - Continuous integration using GitHub Actions
 - MCP server integration using FastMCP
-- Environment-based configuration
 - Cloud deployment
 
 ## Author
