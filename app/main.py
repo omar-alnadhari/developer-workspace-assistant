@@ -29,7 +29,9 @@ app = FastAPI(
 )
 
 
-@app.get("/")
+@app.get("/",
+          operation_id="read_root",
+         )
 def read_root() -> dict[str, str]:
     """Return basic information about the application."""
     return {
@@ -38,7 +40,9 @@ def read_root() -> dict[str, str]:
     }
 
 
-@app.get("/health")
+@app.get("/health",
+    operation_id="health_check",
+    )
 def health_check() -> dict[str, str]:
     """Return the current health status."""
     return {"status": "healthy"}
@@ -48,6 +52,7 @@ def health_check() -> dict[str, str]:
     "/tasks",
     response_model=TaskPublic,
     status_code=status.HTTP_201_CREATED,
+    operation_id="create_task",
 )
 def create_task(
     *,
@@ -68,6 +73,7 @@ def create_task(
 @app.get(
     "/tasks",
     response_model=list[TaskPublic],
+    operation_id="list_tasks",
 )
 def list_tasks(
     *,
@@ -89,6 +95,7 @@ def list_tasks(
 @app.get(
     "/tasks/{task_id}",
     response_model=TaskPublic,
+    operation_id="get_task",
 )
 def get_task(
     *,
@@ -111,6 +118,7 @@ def get_task(
 @app.patch(
     "/tasks/{task_id}",
     response_model=TaskPublic,
+    operation_id="update_task",
 )
 def update_task(
     *,
@@ -145,6 +153,7 @@ def update_task(
 @app.delete(
     "/tasks/{task_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="delete_task",
 )
 def delete_task(
     *,
