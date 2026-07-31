@@ -1,21 +1,27 @@
 # Developer Workspace Assistant
 
-A Python backend application built with FastAPI for managing developer tasks through a REST API.
+[![Continuous Integration](https://github.com/omar-alnadhari/developer-workspace-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/omar-alnadhari/developer-workspace-assistant/actions/workflows/ci.yml)
 
-The project currently provides complete CRUD operations, input validation, automatic API documentation, error handling, and persistent storage using SQLite.
+A Python backend application built with FastAPI for managing developer tasks through both a REST API and Model Context Protocol (MCP) tools.
+
+The project provides complete CRUD operations, request validation, automatic OpenAPI documentation, SQLite persistence, automated testing, Docker containerisation, continuous integration, and a FastMCP server that allows AI agents to interact with the task-management system.
 
 ## Features
 
-- Create developer tasks
-- Retrieve all tasks
-- Retrieve a task by ID
-- Partially update an existing task
-- Delete a task
-- Validate request data
+- Create, retrieve, update, and delete developer tasks
+- Retrieve task collections with pagination
+- Validate request data using Pydantic and SQLModel
 - Return appropriate HTTP status codes
-- Handle missing tasks with `404 Not Found`
-- Store data persistently using SQLite
-- Generate interactive API documentation automatically
+- Handle missing resources with `404 Not Found`
+- Store tasks persistently using SQLite
+- Configure the database through environment variables
+- Generate Swagger UI and ReDoc documentation automatically
+- Run automated REST API and MCP integration tests
+- Package and run the application using Docker
+- Preserve SQLite data using a named Docker volume
+- Run automated tests and Docker builds through GitHub Actions
+- Expose task-management operations as MCP tools using FastMCP
+- Run the MCP server over Streamable HTTP transport
 
 ## Technologies
 
@@ -25,28 +31,47 @@ The project currently provides complete CRUD operations, input validation, autom
 - SQLite
 - Pydantic
 - Uvicorn
-- Git and GitHub
 - Pytest
 - FastAPI TestClient
 - In-memory SQLite testing
+- Model Context Protocol (MCP)
+- FastMCP
+- Streamable HTTP transport
 - Docker
 - Docker volumes
+- GitHub Actions
 - Environment variables
+- Git and GitHub
 
 ## Project Structure
 
 ```text
 developer-workspace-assistant/
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
 ├── app/
 │   ├── __init__.py
 │   ├── database.py
 │   ├── main.py
+│   ├── mcp_server.py
 │   └── models.py
 │
+├── scripts/
+│   └── mcp_http_client.py
+│
+├── tests/
+│   ├── conftest.py
+│   ├── test_mcp.py
+│   └── test_tasks.py
+│
+├── .dockerignore
 ├── .gitignore
-├── requirements.txt
-└── README.md
+├── Dockerfile
+├── README.md
+└── requirements.txt
 ```
 
 ## API Endpoints
@@ -160,14 +185,24 @@ The application currently includes:
 - FastAPI project structure
 - RESTful CRUD endpoints
 - Pydantic and SQLModel validation
-- SQLite persistence
-- Error handling
+- SQLite persistent storage
 - Pagination support
+- Environment-based database configuration
+- Error handling and appropriate HTTP status codes
 - Interactive OpenAPI documentation
+- Automated REST API tests
+- Automated MCP integration tests
+- Docker containerisation
+- Persistent Docker volumes
+- GitHub Actions continuous integration
+- Automated Docker image builds
+- FastMCP tool generation from FastAPI operations
+- Streamable HTTP MCP server
+- Example HTTP MCP client
 
 ## Automated Tests
 
-The project includes automated API tests covering:
+The project includes automated tests covering:
 
 - Empty task-list behaviour
 - Task creation
@@ -176,6 +211,11 @@ The project includes automated API tests covering:
 - Task deletion
 - `404 Not Found` handling
 - Empty-title validation
+- MCP tool discovery
+- Exclusion of human-facing endpoints from MCP
+- Real MCP execution of `create_task`
+- Real MCP execution of `list_tasks`
+- Structured MCP response validation
 
 Run the complete test suite with:
 
@@ -186,10 +226,152 @@ python -m pytest -v
 Expected result:
 
 ```text
-6 passed
+8 passed
 ```
 
 The tests use a separate in-memory SQLite database, so they do not modify the local `tasks.db` database.
+
+## Continuous Integration
+
+GitHub Actions automatically validates the project on every push and pull request targeting the `main` branch.
+
+The CI workflow performs two jobs:
+
+1. **Run automated tests**
+   - Set up Python
+   - Install project dependencies
+   - Run the complete Pytest suite
+
+2. **Build Docker image**
+   - Run only after the tests succeed
+   - Set up Docker Buildx
+   - Build the application image without publishing it
+
+The workflow ensures that both the Python application and the Docker configuration remain valid after every change.
+
+## MCP Integration
+
+The application exposes its task-management operations as Model Context Protocol tools using FastMCP.
+
+Available MCP tools:
+
+- `create_task`
+- `list_tasks`
+- `get_task`
+- `update_task`
+- `delete_task`
+
+The FastAPI root and health-check endpoints are excluded because they are intended for users and monitoring rather than AI-agent actions.
+
+FastMCP generates the MCP tools from the FastAPI OpenAPI schema. Explicit FastAPI `operation_id` values provide short and stable tool names.
+
+The MCP integration tests verify:
+
+- MCP tool discovery
+- Exclusion of non-agent endpoints
+- Real execution of `create_task`
+- Real execution of `list_tasks`
+- Structured task responses
+
+## Running the MCP Server over HTTP
+
+Start the MCP server:
+
+```powershell
+python -m app.mcp_server
+```
+
+The MCP endpoint will be available at:
+
+```text
+http://127.0.0.1:8001/mcp
+```
+
+The server uses Streamable HTTP transport.
+
+The host and port can be configured using:
+
+```text
+MCP_HOST
+MCP_PORT
+```
+
+Default values:
+
+```text
+MCP_HOST=127.0.0.1
+MCP_PORT=8001
+```
+
+Do not expect the `/mcp` endpoint to display a normal web page. It is a protocol endpoint intended for MCP-compatible clients.
+
+### Example HTTP MCP Client
+
+Leave the MCP server running, open a second terminal, and execute:
+
+```powershell
+python scripts/mcp_http_client.py
+```
+
+The example client will:
+
+1. Connect to the MCP HTTP endpoint
+2. Display the available MCP tools
+3. Create a task using `create_task`
+4. Retrieve stored tasks using `list_tasks`
+
+The complete request flow is:
+
+```text
+MCP Client
+    ↓ Streamable HTTP
+FastMCP Server
+    ↓
+FastAPI Operations
+    ↓
+SQLModel
+    ↓
+SQLite Database
+```
+## Environment Configuration
+
+The application supports environment-based configuration.
+
+### Database Configuration
+
+The default local database URL is:
+
+```text
+sqlite:///tasks.db
+```
+
+A different location can be supplied using:
+
+```text
+DATABASE_URL
+```
+
+Example Docker value:
+
+```text
+DATABASE_URL=sqlite:////data/tasks.db
+```
+
+### MCP Server Configuration
+
+The MCP server supports:
+
+```text
+MCP_HOST
+MCP_PORT
+```
+
+Default values:
+
+```text
+MCP_HOST=127.0.0.1
+MCP_PORT=8001
+```
 
 ## Docker
 
@@ -232,10 +414,12 @@ docker rm developer-workspace-api
 
 The named Docker volume preserves the SQLite database even after the container is removed.
 
+The Docker image is also built automatically by the GitHub Actions CI workflow after all automated tests pass.
+
 ## Planned Improvements
 
-- Continuous integration using GitHub Actions
-- MCP server integration using FastMCP
+- Docker Compose for running the REST API and MCP server together
+- Expanded MCP CRUD integration tests
 - Cloud deployment
 
 ## Author
